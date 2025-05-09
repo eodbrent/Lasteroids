@@ -129,47 +129,29 @@ function drawground()
   love.graphics.setColor(1,1,1)
 end
 
+-- TODO: Clean this function up
 function drawXPbar()
-    love.graphics.setColor(197 / 255, 197 / 255, 197 / 255)
-    local xp_bar_width = border_width / 4
-    local xp_bar_height = win_height - (border_width / 2)
-    local xp_bar_x = win_width - (border_width * 0.50)
-    local xp_bar_y = xp_bar_width
-    local xp_pad = xp_bar_width * 0.1
-    local xp_width = xp_bar_width - (xp_pad * 2)
-    local xp_height = xp_bar_height - (xp_pad * 2)
-    local xp_x = xp_bar_x + xp_pad
-    local xp_percent = player.xp / player.xp_needed * 100
-    local xp_bar_progress = xp_height * xp_percent
-    local xp_y = win_height - xp_pad - xp_width - xp_bar_progress
-    --local xp_y = win_height - xp_bar_progress - xp_pad
-    love.graphics.rectangle("fill", xp_bar_x, xp_bar_y, xp_bar_width, xp_bar_height) -- xp bar background
-    love.graphics.print("xp: " .. player.xp .. ", needed: " .. player.xp_needed, win_width * 0.05 + 10, 15)
-
-    local display_xp = string.format("%.f%%", xp_percent)
-
-    love.graphics.print(display_xp, win_width * 0.05 + 10, 30)
-    love.graphics.setColor(84 / 255, 84 / 255, 84 / 255)
-    love.graphics.rectangle("fill", xp_x, xp_y, xp_width, xp_height * (xp_percent / 100)) -- xp bar fill
-    love.graphics.setColor(1, 1, 1)
-end
-
-function drawXPbar2()
-    love.graphics.setColor(197 / 255, 197 / 255, 197 / 255)
+  love.graphics.setColor(197 / 255, 197 / 255, 197 / 255)
+  local xp_percent = player.xp / player.xp_needed
   -- -- XP BAR BACKGROUND -- --
   local xp_bar_width = border_width / 4
   local xp_bar_height = win_height - (border_width / 2)
   local xp_bar_x = win_width - (border_width * 0.50)
   local xp_bar_y = xp_bar_width
-  love.graphics.rectangle("fill", xp_bar_x, xp_bar_y,xp_bar_width, xp_bar_height)
-    --  END XP BAR BACKGROUND  --
-    
-  love.graphics.setColor(84 / 255, 84 / 255, 84 / 255)
-    --love.graphics.rectangle("fill", xp_x, xp_y - (xp_full_height * xp_percent), xp_width, xp_actual)
+  love.graphics.rectangle("fill", xp_bar_x, xp_bar_y, xp_bar_width, xp_bar_height)
+  -- -- END XP BAR BACKGROUND -- --
+  love.graphics.setColor(84 / 255, 84 / 255, 84 / 255) -- darker gray for xp bar fill
+    -- -- -- XP FILL BAR -- -- --
+  local xp_pad = xp_bar_width * 0.1
+  local xp_full_height = xp_bar_height - (xp_pad * 2)
+  local xp_pad = xp_bar_width * .1
+  local xp_actual_in_pixels = xp_full_height * xp_percent
+  love.graphics.rectangle("fill", xp_bar_x + xp_pad, win_height - xp_bar_width - xp_pad - xp_actual_in_pixels, xp_bar_width - (xp_pad * 2), xp_actual_in_pixels)
+  -- -- -- END XP FILL BAR -- -- --
+  local display_xp = string.format("%.f%%", xp_percent * 100)
   love.graphics.print("xp: " .. player.xp .. ", needed: " .. player.xp_needed, win_width * 0.05 + 10, 15)
-
-  local display_xp = string.format("%.f%%", xp_percent)
   love.graphics.print(display_xp, win_width * 0.05 + 10, 30)
+  love.graphics.print("XP height: " .. xp_full_height .. "XP in pixels: " .. xp_actual_in_pixels, win_width * 0.05 + 10, 45)
   love.graphics.setColor(1, 1, 1)
 end
 
@@ -218,10 +200,14 @@ function love.draw()
   love.graphics.setColor(84/255, 84/255, 84/255)
   love.graphics.polygon("line", player.x1,player.y1, player.x2,player.y2, player.x3, player.y3)
   love.graphics.setColor(1, 1, 1)
-  drawXPbar2()
+  -- -- DRAW XP BAR -- --
+  drawXPbar()
+  -- -- DRAW AIM ASSIST -- --
   love.graphics.setColor(76,255,0,1)
   love.graphics.line(player.x3,player.y3,player.x3,0)
   love.graphics.setColor(255,255,255,1)
+  -- -- END DRAW AIM ASSIST -- --
+  -- -- DRAW UI STATS -- --
   love.graphics.print("    Targets: " .. tostring(#listOfTargets), win_width*0.05 + 10, win_height - 120)
   love.graphics.print("      Kills: " .. tostring(target_kills), win_width*0.05 + 10, win_height - 105)
   love.graphics.print("   Got Away: " .. tostring(lost_targets), win_width*0.05 + 10, win_height - 90)
@@ -236,7 +222,8 @@ function love.draw()
   end
   local display_accuracy = "   Accuracy: " .. string.format("%.f%%",shot_accuracy)
   love.graphics.print(display_accuracy,  win_width*0.05 + 10,win_height - 15)
-  --love.graphics.printf("Accuracy: " .. tostring(accuracy), win_width*0.05 + 10, 85)
+  -- -- END DRAW UI STATS -- --
+  -- -- DRAW TARGETS -- --
   for i, v in ipairs(listOfTargets) do
     local text = tostring(v.health)
     local font_width = font:getWidth(text)
@@ -247,7 +234,8 @@ function love.draw()
       lost_targets = lost_targets + 1
     end
   end
-
+  -- -- END DRAW TARGETS -- --
+  -- -- DRAW BULLETS -- --
   for i = #listOfPlayerBullets, 1, -1 do
     local v = listOfPlayerBullets[i]
     love.graphics.circle("fill", v.x, v.y, v.radius, 8)
@@ -257,6 +245,7 @@ function love.draw()
       missed_shots = missed_shots + 1
     end
   end
+  -- -- END DRAW BULLETS -- --
 end
 
 function love.keypressed(key, scancode, isrepeat)
@@ -266,9 +255,3 @@ function love.keypressed(key, scancode, isrepeat)
     createBullet()
   end
 end
-
-          --a = v.y3 - v.y1
-          --b = v.x3 - v.x1
-          --a_sqr = a * a
-          --b_sqr = b * b
-          --c = math.sqrt(a_sqr + b_sqr)
